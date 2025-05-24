@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "960185269865",
+    "project_id": "note-task-taker",
+    "storage_bucket": "note-task-taker.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:960185269865:android:6528b245112afac1e32cf8",
+        "android_client_info": {
+          "package_name": "com.example.mybackend"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC9cbWpNz9Iilz9Mh__l4kIpVWSgxUv21Q"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
