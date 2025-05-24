@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:http/http.dart' as http;
+import 'package:geolocator/geolocator.dart';
+import 'dart:convert';
+
 import 'note_view.dart';
 import 'task_view.dart';
 import 'fitness/fitness_dashboard.dart';
@@ -68,6 +72,48 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  late Future<Map<String, dynamic>> _weatherData;
+
+  @override
+  void initState() {
+    super.initState();
+    _weatherData = fetchWeatherByLocation();
+  }
+
+  Future<Position> _determinePosition() async {
+    LocationPermission permission;
+
+    permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+    }
+
+    if (permission == LocationPermission.deniedForever ||
+        permission == LocationPermission.denied) {
+      throw Exception('Location permissions are denied');
+    }
+
+    return await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high);
+  }
+
+  Future<Map<String, dynamic>> fetchWeatherByLocation() async {
+    Position position = await _determinePosition();
+    final lat = position.latitude;
+    final lon = position.longitude;
+
+    final response = await http.get(
+      Uri.parse(
+          'https://api.openweathermap.org/data/2.5/weather?lat=$lat&lon=$lon&appid=52efcfedd336d7ad6def65a3d95739e2&units=metric'),
+    );
+
+    if (response.statusCode == 200) {
+      return json.decode(response.body);
+    } else {
+      throw Exception('Failed to load weather');
+    }
+  }
+
   void _navigateTo(Widget page) {
     Navigator.push(
       context,
@@ -96,6 +142,46 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
+  Widget _buildWeatherWidget() {
+    return FutureBuilder<Map<String, dynamic>>(
+      future: _weatherData,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Center(child: CircularProgressIndicator());
+        } else if (snapshot.hasError) {
+          return Center(
+              child: Text('Error loading weather: ${snapshot.error}',
+                  textAlign: TextAlign.center));
+        } else if (snapshot.hasData) {
+          final weatherData = snapshot.data!;
+          final weatherIcon = weatherData['weather'][0]['icon'];
+          final weatherDescription = weatherData['weather'][0]['description'];
+          final temperature = weatherData['main']['temp'];
+          final city = weatherData['name'];
+
+          return Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Image.network(
+                'https://openweathermap.org/img/wn/$weatherIcon@2x.png',
+                width: 100,
+                height: 100,
+              ),
+              SizedBox(height: 8),
+              Text('City: $city', style: TextStyle(fontSize: 16)),
+              Text('Temperature: ${temperature.toString()}°C',
+                  style: TextStyle(fontSize: 16)),
+              Text('Weather: $weatherDescription',
+                  style: TextStyle(fontSize: 16)),
+            ],
+          );
+        } else {
+          return Center(child: Text('No weather data available'));
+        }
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -113,18 +199,19 @@ class _MyHomePageState extends State<MyHomePage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            // Updated from headline5 to headlineMedium for Flutter 3.29.3
-            Text("Hello, User", style: Theme.of(context).textTheme.headlineMedium),
+            Text("Hello, User",
+                style: Theme.of(context).textTheme.headlineMedium),
             SizedBox(height: 20),
             Container(
               height: 150,
               width: double.infinity,
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.secondary.withOpacity(0.1),
+                color:
+                Theme.of(context).colorScheme.secondary.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
               alignment: Alignment.center,
-              child: Text("Weather API Placeholder"),
+              child: _buildWeatherWidget(),
             ),
             SizedBox(height: 50),
             Row(

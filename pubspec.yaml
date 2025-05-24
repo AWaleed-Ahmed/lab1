@@ -13,9 +13,13 @@ dependencies:
   cupertino_icons: ^1.0.8
   shared_preferences: ^2.2.2
 
-  # ✅ Added Firebase core
+  # Firebase core and Firestore
   firebase_core: ^3.13.0
-  cloud_firestore: ^5.0.0 
+  cloud_firestore: ^5.0.0
+
+  # Added for Weather API
+  http: ^0.13.6
+  geolocator: ^14.0.0
 
 dev_dependencies:
   flutter_test:
